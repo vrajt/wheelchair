@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -5,14 +6,14 @@ import type { Category, City } from '@/types';
 import { mockCategories, mockCities } from '@/lib/mock-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input from "@/components/ui/input";
-import { Button from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Badge from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal, Edit, Trash2, PlusCircle, ToggleLeft, ToggleRight, Tag, MapPin } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { Label from "@/components/ui/label";
-import { PageTitle from '@/components/page-title';
+import { Label } from "@/components/ui/label";
+import { PageTitle } from '@/components/page-title';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import * as LucideIcons from 'lucide-react';
 
