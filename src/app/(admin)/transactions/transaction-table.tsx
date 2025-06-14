@@ -1,16 +1,17 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
 import type { Transaction } from '@/types';
-import { mockTransactions from '@/lib/mock-data';
+import { mockTransactions } from '@/lib/mock-data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input from "@/components/ui/input";
-import { Button from "@/components/ui/button";
-import { Badge from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { FileDown, CheckCircle, XCircle, Clock, ShieldAlert, ShieldCheck, AlertTriangle } from "lucide-react";
 import AnomalyDetectionModal from './anomaly-detection-modal';
-import { PaginationControls from '@/components/pagination-controls';
-import { PageTitle from '@/components/page-title';
+import { PaginationControls } from '@/components/pagination-controls';
+import { PageTitle } from '@/components/page-title';
 import type { TransactionAnomalyOutput } from '@/ai/flows/transaction-anomaly-detection';
 
 const ITEMS_PER_PAGE = 10;
@@ -145,3 +146,4 @@ export default function TransactionTable() {
     </>
   );
 }
+
