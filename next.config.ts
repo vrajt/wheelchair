@@ -1,9 +1,11 @@
-import type {NextConfig} from 'next';
-
+import type { NextConfig } from 'next';
+import 'dotenv/config';
 const nextConfig: NextConfig = {
-  /* config options here */
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+  },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: process.env.NODE_ENV !== 'production',
   },
   eslint: {
     ignoreDuringBuilds: true,
@@ -13,11 +15,10 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'placehold.co',
-        port: '',
         pathname: '/**',
       },
     ],
   },
 };
-
+console.log('Loaded API URL:', process.env.NEXT_PUBLIC_API_URL);
 export default nextConfig;

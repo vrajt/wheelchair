@@ -1,28 +1,51 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
-import type { Rental } from '@/types';
-import { mockRentals } from '@/lib/mock-data';
+import React, { useEffect, useMemo, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileDown, CalendarDays, CheckCircle, XCircle, AlertCircle } from "lucide-react";
-import { PaginationControls } from '@/components/pagination-controls';
-import { PageTitle } from '@/components/page-title';
+import { FileDown, CalendarDays, CheckCircle, XCircle } from "lucide-react";
+import { PaginationControls } from "@/components/pagination-controls";
+import { PageTitle } from "@/components/page-title";
 
 const ITEMS_PER_PAGE = 10;
 
+type Rental = {
+  id: number;
+  user_id: number;
+  wheelchair: {
+    name: string;
+    description: string;
+  };
+  rent_start_date: string;
+  rent_end_date: string;
+  total_amount: string;
+  order_status: string;
+};
+
 export default function RentalTable() {
-  const [rentals, setRentals] = useState<Rental[]>(mockRentals);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [rentals, setRentals] = useState<Rental[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
+  useEffect(() => {
+    fetch("http://localhost:3000/api/rent/allOrders")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setRentals(data.data.orders);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch rentals", err);
+      });
+  }, []);
+
   const filteredRentals = useMemo(() => {
-    return rentals.filter(rental =>
-      rental.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      rental.wheelchairName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      rental.id.toLowerCase().includes(searchTerm.toLowerCase())
+    return rentals.filter((rental) =>
+      rental.id.toString().includes(searchTerm.toLowerCase()) ||
+      rental.wheelchair.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [rentals, searchTerm]);
 
@@ -33,18 +56,21 @@ export default function RentalTable() {
 
   const totalPages = Math.ceil(filteredRentals.length / ITEMS_PER_PAGE);
 
-  const handleExport = () => {
-    console.log("Exporting rental data to Excel...");
-    // Actual export logic here
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "Ongoing":
+        return <Badge className="bg-blue-500 text-white"><CalendarDays className="mr-1 h-3 w-3" />Ongoing</Badge>;
+      case "Completed":
+        return <Badge className="bg-green-500 text-white"><CheckCircle className="mr-1 h-3 w-3" />Completed</Badge>;
+      case "Cancelled":
+        return <Badge className="bg-red-500 text-white"><XCircle className="mr-1 h-3 w-3" />Cancelled</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
   };
 
-  const getStatusBadge = (status: Rental['status']) => {
-    switch (status) {
-      case 'Ongoing': return <Badge variant="secondary" className="bg-blue-500 hover:bg-blue-600 text-white"><CalendarDays className="mr-1 h-3 w-3" />Ongoing</Badge>;
-      case 'Completed': return <Badge variant="default" className="bg-green-500 hover:bg-green-600"><CheckCircle className="mr-1 h-3 w-3" />Completed</Badge>;
-      case 'Cancelled': return <Badge variant="destructive"><XCircle className="mr-1 h-3 w-3" />Cancelled</Badge>;
-      default: return <Badge variant="outline">{status}</Badge>;
-    }
+  const handleExport = () => {
+    console.log("Export logic goes here");
   };
 
   return (
@@ -55,9 +81,10 @@ export default function RentalTable() {
           Export to Excel
         </Button>
       </PageTitle>
+
       <div className="mb-4">
         <Input
-          placeholder="Search rentals (user, wheelchair, ID)..."
+          placeholder="Search rentals by ID or wheelchair..."
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
@@ -66,12 +93,12 @@ export default function RentalTable() {
           className="max-w-sm"
         />
       </div>
+
       <div className="rounded-md border shadow-sm bg-card">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Rental ID</TableHead>
-              <TableHead>User</TableHead>
               <TableHead>Wheelchair</TableHead>
               <TableHead>Start Date</TableHead>
               <TableHead>End Date</TableHead>
@@ -82,18 +109,18 @@ export default function RentalTable() {
           <TableBody>
             {paginatedRentals.map((rental) => (
               <TableRow key={rental.id}>
-                <TableCell className="font-medium">{rental.id}</TableCell>
-                <TableCell className="text-muted-foreground">{rental.userName}</TableCell>
-                <TableCell className="text-muted-foreground">{rental.wheelchairName}</TableCell>
-                <TableCell className="text-muted-foreground">{new Date(rental.startDate).toLocaleDateString()}</TableCell>
-                <TableCell className="text-muted-foreground">{new Date(rental.endDate).toLocaleDateString()}</TableCell>
-                <TableCell className="text-muted-foreground">${rental.totalAmount.toFixed(2)}</TableCell>
-                <TableCell>{getStatusBadge(rental.status)}</TableCell>
+                <TableCell>{rental.id}</TableCell>
+                <TableCell>{rental.wheelchair.name}</TableCell>
+                <TableCell>{new Date(rental.rent_start_date).toLocaleDateString()}</TableCell>
+                <TableCell>{new Date(rental.rent_end_date).toLocaleDateString()}</TableCell>
+                <TableCell>₹{parseFloat(rental.total_amount).toFixed(2)}</TableCell>
+                <TableCell>{getStatusBadge(rental.order_status)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
+
       {totalPages > 1 && (
         <PaginationControls
           currentPage={currentPage}
@@ -103,6 +130,7 @@ export default function RentalTable() {
           canNextPage={currentPage < totalPages}
         />
       )}
+
       {paginatedRentals.length === 0 && (
         <div className="text-center py-10 text-muted-foreground">No rentals found.</div>
       )}

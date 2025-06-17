@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import type { User } from '@/types';
-import { mockUsers } from '@/lib/mock-data';
+import { useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,14 +12,42 @@ import { MoreHorizontal, FileDown, UserCheck, UserX, CheckCircle, XCircle, Clock
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PaginationControls } from '@/components/pagination-controls';
 import { PageTitle } from '@/components/page-title';
+import axios from 'axios';
 
 const ITEMS_PER_PAGE = 10;
 
 export default function UserTable() {
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+useEffect(() => {
+  const fetchUsers = async () => {
+    try {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/api/users`);
+      const data = res.data;
+      const formatted = data.map((user: any) => ({
+        id: String(user.id),
+        name: `${user.first_name} ${user.last_name}`,
+        email: user.email,
+        status: user.account_status === 'REGISTERED' ? 'Active' : 'Inactive',
+        kycStatus:
+          user.kyc_status === 'ACCEPTED'
+            ? 'Verified'
+            : user.kyc_status === 'REJECTED'
+            ? 'Rejected'
+            : 'Pending',
+        registrationDate: user.createdAt,
+        avatarUrl: '/avatars/default.png'
+      }));
 
+      setUsers(formatted);
+    } catch (err) {
+      console.error("Axios failed to fetch users:", err);
+    }
+  };
+
+  fetchUsers();
+}, []);
   const filteredUsers = useMemo(() => {
     return users.filter(user =>
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
