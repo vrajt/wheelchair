@@ -64,12 +64,12 @@ export const mockCategories: Category[] = [
   { id: 'cat-4', name: 'Sport', icon: 'Bike' },
 ];
 
-export const mockCities: City[] = [
-  { id: 'city-1', name: 'New York', status: 'Active' },
-  { id: 'city-2', name: 'Los Angeles', status: 'Active' },
-  { id: 'city-3', name: 'Chicago', status: 'Inactive' },
-  { id: 'city-4', name: 'London', status: 'Active' },
-];
+// export const mockCities: City[] = [
+//   { id: 'city-1', name: 'New York',  state: 'Sydney',is_active: true },
+//   { id: 'city-2', name: 'Los Angeles',  state: 'California',is_active: true },
+//   { id: 'city-3', name: 'Chicago',  state: 'Test', is_active: true },
+//   { id: 'city-4', name: 'London',  state: 'Paris', is_active: true },
+// ];
 
 export const mockNotifications: Notification[] = Array.from({length: 5}, (_, i) => ({
     id: `notif-${i+1}`,
