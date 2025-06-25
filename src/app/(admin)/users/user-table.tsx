@@ -15,30 +15,27 @@ import { PageTitle } from '@/components/page-title';
 import axios from 'axios';
 
 const ITEMS_PER_PAGE = 10;
-
+const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 export default function UserTable() {
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 useEffect(() => {
+  
   const fetchUsers = async () => {
     try {
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/api/users`);
+      const res = await axios.get(`${baseUrl}/admin/api/dashboardUsers`);
       const data = res.data;
-      const formatted = data.map((user: any) => ({
-        id: String(user.id),
-        name: `${user.first_name} ${user.last_name}`,
-        email: user.email,
-        status: user.account_status === 'REGISTERED' ? 'Active' : 'Inactive',
-        kycStatus:
-          user.kyc_status === 'ACCEPTED'
-            ? 'Verified'
-            : user.kyc_status === 'REJECTED'
-            ? 'Rejected'
-            : 'Pending',
-        registrationDate: user.createdAt,
-        avatarUrl: '/avatars/default.png'
-      }));
+const formatted = data.map((user: any) => ({
+  id: String(user.id),
+  name: `${user.first_name} ${user.last_name}`,
+  email: user.email,
+  status: user.account_status === 'REGISTERED' ? 'Active' : 'Inactive',
+  kycStatus: user.kyc_status,
+  registrationDate: new Date(user.createdAt).toLocaleDateString('en-CA'), // 👈 consistent format
+  avatarUrl: '/avatars/default.png'
+}));
+
 
       setUsers(formatted);
     } catch (err) {
@@ -48,6 +45,7 @@ useEffect(() => {
 
   fetchUsers();
 }, []);
+
   const filteredUsers = useMemo(() => {
     return users.filter(user =>
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -62,25 +60,106 @@ useEffect(() => {
 
   const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
 
-  const handleExport = () => {
-    console.log("Exporting user data to Excel...");
-    // Actual export logic would go here
-  };
+const handleExport = async () => {
+  try {
+    const res = await axios.get(`${baseUrl}/admin/api/dashboardUsers`);
+    const data = res.data;
 
-  const handleStatusChange = (userId: string, field: 'status' | 'kycStatus', value: User['status'] | User['kycStatus']) => {
-    setUsers(prevUsers => prevUsers.map(user => 
+    const formatted = data.map((user: any) => ({
+      ID: String(user.id),
+      Name: `${user.first_name} ${user.last_name}`,
+      Email: user.email,
+      Status: user.account_status === 'REGISTERED' ? 'Active' : 'Inactive',
+      KYC_Status:
+        user.kyc_status === 'ACCEPTED'
+          ? 'Verified'
+          : user.kyc_status === 'REJECTED'
+          ? 'Rejected'
+          : 'Pending',
+      Registration_Date: new Date(user.createdAt).toLocaleDateString('en-CA') // YYYY-MM-DD
+    }));
+
+    // Convert to CSV
+    const headers = Object.keys(formatted[0]).join(',') + '\n';
+    const rows = formatted.map((obj: Record<string, any>) => Object.values(obj).join(',')).join('\n');
+    const csvContent = headers + rows;
+
+    // Trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'users.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    console.log("User data exported as CSV.");
+  } catch (err) {
+    console.error("Export failed:", err);
+  }
+};
+
+
+const handleStatusChange = (
+  userId: string,
+  field: 'status' | 'kycStatus',
+  value: string // ← allow any string
+) => {
+  setUsers(prev =>
+    prev.map(user =>
       user.id === userId ? { ...user, [field]: value } : user
-    ));
-  };
+    )
+  );
 
-  const getKycStatusBadge = (status: User['kycStatus']) => {
-    switch (status) {
-      case 'Verified': return <Badge variant="default" className="bg-green-500 hover:bg-green-600"><CheckCircle className="mr-1 h-3 w-3" />Verified</Badge>;
-      case 'Pending': return <Badge variant="secondary" className="bg-yellow-400 hover:bg-yellow-500 text-yellow-900"><Clock className="mr-1 h-3 w-3" />Pending</Badge>;
-      case 'Rejected': return <Badge variant="destructive"><XCircle className="mr-1 h-3 w-3" />Rejected</Badge>;
-      default: return <Badge variant="outline">{status}</Badge>;
-    }
-  };
+  if (field === 'kycStatus') {
+    axios.put(`${baseUrl}/admin/api/updateKyc/${userId}`, {
+      kyc_status: value
+    }).catch(err => {
+      console.error("Failed to update KYC status:", err);
+    });
+  }
+};
+
+
+const getKycStatusBadge = (status: string) => {
+  if (status === 'ACCEPTED') {
+    return (
+      <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+        <CheckCircle className="mr-1 h-3 w-3" /> Verified
+      </Badge>
+    );
+  } else if (status === 'PENDING') {
+    return (
+      <Badge variant="secondary" className="bg-yellow-400 hover:bg-yellow-500 text-yellow-900">
+        <Clock className="mr-1 h-3 w-3" /> Pending
+      </Badge>
+    );
+  } else if (status === 'REJECTED') {
+    return (
+      <Badge variant="destructive">
+        <XCircle className="mr-1 h-3 w-3" /> Rejected
+      </Badge>
+    );
+  } else if (status === 'UPLOADED') {
+    return (
+      <Badge variant="default" className="bg-blue-500 hover:bg-blue-600">
+        <FileDown className="mr-1 h-3 w-3" /> Uploaded
+      </Badge>
+    );
+  } else if (status === 'IN PROCESS') {
+    return (
+      <Badge variant="outline" className="border-yellow-500 text-yellow-700">
+        <Clock className="mr-1 h-3 w-3" /> In Process
+      </Badge>
+    );
+  } else {
+    return <Badge variant="outline">{status}</Badge>;
+  }
+};
+
+
+
   
   const getUserStatusBadge = (status: User['status']) => {
      switch (status) {
@@ -137,36 +216,48 @@ useEffect(() => {
                 <TableCell>{getUserStatusBadge(user.status)}</TableCell>
                 <TableCell>{getKycStatusBadge(user.kycStatus)}</TableCell>
                 <TableCell className="text-muted-foreground">{new Date(user.registrationDate).toLocaleDateString()}</TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleStatusChange(user.id, 'status', user.status === 'Active' ? 'Inactive' : 'Active')}>
-                        {user.status === 'Active' ? <UserX className="mr-2 h-4 w-4" /> : <UserCheck className="mr-2 h-4 w-4" />}
-                        {user.status === 'Active' ? 'Deactivate' : 'Activate'} User
-                      </DropdownMenuItem>
-                      {user.kycStatus === 'Pending' && (
-                        <>
-                          <DropdownMenuItem onClick={() => handleStatusChange(user.id, 'kycStatus', 'Verified')}>
-                            <CheckCircle className="mr-2 h-4 w-4 text-green-500" /> Verify KYC
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleStatusChange(user.id, 'kycStatus', 'Rejected')}>
-                            <XCircle className="mr-2 h-4 w-4 text-red-500" /> Reject KYC
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                       {user.kycStatus === 'Rejected' && (
-                         <DropdownMenuItem onClick={() => handleStatusChange(user.id, 'kycStatus', 'Pending')}>
-                            <Clock className="mr-2 h-4 w-4 text-yellow-500" /> Mark as Pending
-                          </DropdownMenuItem>
-                       )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+<TableCell className="text-right flex gap-2 justify-end">
+  {/* Dropdown 1: User Status */}
+  {/* <DropdownMenu>
+    <DropdownMenuTrigger asChild>
+      <Button variant="ghost" size="icon">
+        <MoreHorizontal className="h-4 w-4" />
+      </Button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent align="end">
+      <DropdownMenuItem onClick={() => handleStatusChange(user.id, 'status', user.status === 'Active' ? 'Inactive' : 'Active')}>
+        {user.status === 'Active' ? <UserX className="mr-2 h-4 w-4" /> : <UserCheck className="mr-2 h-4 w-4" />}
+        {user.status === 'Active' ? 'Deactivate' : 'Activate'} User
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  </DropdownMenu> */}
+
+  {/* Dropdown 2: KYC Status */}
+  <DropdownMenu>
+    <DropdownMenuTrigger asChild>
+      <Button variant="ghost" size="icon">
+        <Clock className="h-4 w-4" />
+      </Button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent align="end">
+      {['PENDING', 'UPLOADED', 'IN PROCESS', 'ACCEPTED', 'REJECTED'].map((statusOption) => (
+        <DropdownMenuItem
+          key={statusOption}
+          onClick={() => handleStatusChange(user.id, 'kycStatus', statusOption)}
+        >
+          {user.kycStatus === statusOption ? (
+            <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+          ) : (
+            <Clock className="mr-2 h-4 w-4 text-gray-400" />
+          )}
+          {statusOption}
+        </DropdownMenuItem>
+      ))}
+    </DropdownMenuContent>
+  </DropdownMenu>
+</TableCell>
+
+
               </TableRow>
             ))}
           </TableBody>
