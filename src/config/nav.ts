@@ -35,7 +35,7 @@ export const navItems: NavItem[] = [
     icon: CreditCard,
   },
   {
-    title: 'Categories & Cities',
+    title: 'Cities',
     href: '/categories-cities',
     icon: Shapes, // Using Shapes as a generic icon for both
   },
