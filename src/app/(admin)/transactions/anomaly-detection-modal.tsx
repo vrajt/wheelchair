@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import type { Transaction } from '@/types';
+// import type { Transaction } from '@/types';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -14,6 +14,14 @@ interface AnomalyDetectionModalProps {
   onClose: () => void;
   transaction: Transaction | null;
   onAnomalyReport?: (transactionId: string, report: TransactionAnomalyOutput) => void;
+};
+
+interface Transaction {
+  id:number,
+  transaction_id: string;
+  amount: string;
+  payment_gateway: string;
+  transaction_status: string;
 }
 
 export default function AnomalyDetectionModal({ isOpen, onClose, transaction, onAnomalyReport }: AnomalyDetectionModalProps) {
@@ -38,7 +46,7 @@ export default function AnomalyDetectionModal({ isOpen, onClose, transaction, on
       const result = await detectTransactionAnomaly(input);
       setAnalysisResult(result);
       if (onAnomalyReport && result) {
-        onAnomalyReport(transaction.id, result);
+        onAnomalyReport(transaction.transaction_id, result);
       }
     } catch (error) {
       console.error("Error detecting anomaly:", error);
@@ -71,10 +79,11 @@ export default function AnomalyDetectionModal({ isOpen, onClose, transaction, on
         <div className="space-y-4 py-4">
           <div>
             <h4 className="font-semibold text-sm mb-1">Transaction Details:</h4>
-            <p className="text-xs text-muted-foreground">ID: {transaction.id}</p>
-            <p className="text-xs text-muted-foreground">User: {transaction.userName}</p>
-            <p className="text-xs text-muted-foreground">Amount: ${transaction.amount.toFixed(2)}</p>
-            <p className="text-xs text-muted-foreground">Date: {new Date(transaction.date).toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">ID: {transaction.transaction_id}</p>
+            <p className="text-xs text-muted-foreground">Payment Gateway: {transaction.payment_gateway}</p>
+            {/* <p className="text-xs text-muted-foreground">User: {transaction.userName}</p> */}
+            <p className="text-xs text-muted-foreground">Amount: ${parseFloat(transaction.amount).toFixed(2)}</p>
+            {/* <p className="text-xs text-muted-foreground">Date: {new Date(transaction.date).toLocaleString()}</p> */}
           </div>
 
           {!analysisResult && (

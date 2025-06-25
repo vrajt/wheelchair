@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Edit, Trash2, PlusCircle, ToggleLeft, ToggleRight, Tag, MapPin } from "lucide-react";
+import { MoreHorizontal, Edit, FileDown,  Trash2, PlusCircle, ToggleLeft, ToggleRight, Tag, MapPin } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { PageTitle } from '@/components/page-title';
@@ -246,8 +246,8 @@ function CitiesTab() {
 
   const fetchCities = async () => {
     try {
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/getCities`);
-      setCities(res.data.data.cities);
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/api/getCities`);
+      setCities(res.data.data);
     } catch (err) {
       console.error("Axios failed to fetch users:", err);
     }
@@ -260,14 +260,14 @@ function CitiesTab() {
   };
   const handleDeleteCity = (id: string) => (setDeletingCityId(id))
   const toggleStatus = async (id: string) => {
-    const res = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/api/updateStatus/${id}`);
+    const res = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/admin/api/updateStatus/${id}`);
     setCities(prev => prev.map(c => c.id === id ? { ...c, is_active: c.is_active === true ? false : true } : c));
 
   };
 
   const handleFormSubmit = async (cityData: City) => {
     if (editingCity) {
-      const res = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/updateCity`,cityData);
+      const res = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/admin/api/updateCity`,cityData);
       const data = res.data;
       if(data.success){
         toast({
@@ -278,7 +278,7 @@ function CitiesTab() {
       }
 
     } else {
-      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/addCity`,cityData);
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/admin/api/addCity`,cityData);
       const data = res.data
       if(data.success){
         setCities(prev => [...prev, cityData]);
@@ -296,7 +296,7 @@ function CitiesTab() {
     if(deletingCityId) {
       setIsLoading(true);
       setCities(prev => prev.filter(c => c.id !== deletingCityId));
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/deleteCity/${deletingCityId}`);
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/admin/api/deleteCity/${deletingCityId}`);
       setDeletingCityId(null);
       setIsLoading(false);
     }
@@ -308,10 +308,52 @@ function CitiesTab() {
       : <Badge variant="destructive">Inactive</Badge>;
   };
 
+
+  
+  const handleExport = async () => {
+    try {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/api/getCities`);
+      const data = res.data.data;
+  
+      const formatted = data.map((city: any) => ({
+        // ID: String(city._id),
+        Name: city.city_name,
+        State: city.state_name,
+        Status: city.is_active
+      }));
+  
+      // Convert to CSV
+      const headers = Object.keys(formatted[0]).join(',') + '\n';
+      const rows = formatted.map((obj: Record<string, any>) => Object.values(obj).join(',')).join('\n');
+      const csvContent = headers + rows;
+  
+      // Trigger download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'cities.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+  
+      console.log("Cities data exported as CSV.");
+    } catch (err) {
+      console.error("Export failed:", err);
+    }
+  };
+
   return (
     <>
     <div className="space-y-4">
+      <PageTitle title="City Management">
+          <Button onClick={handleExport} variant="outline">
+            <FileDown className="mr-2 h-4 w-4" />
+            Export to Excel
+          </Button>
+        </PageTitle>
       <div className="flex justify-between items-center">
+
         <div className="mb-4">
           <Input
             placeholder="Search cities..."
@@ -388,7 +430,6 @@ function CitiesTab() {
 export default function CategoryCityTabs() {
   return (
     <>
-      <PageTitle title="City Management" />
       {/* <Tabs defaultValue="categories" className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
           <TabsTrigger value="categories"><Tag className="mr-2 h-4 w-4"/>Categories</TabsTrigger>
