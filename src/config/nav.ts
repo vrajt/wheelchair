@@ -39,22 +39,22 @@ export const navItems: NavItem[] = [
     href: '/categories-cities',
     icon: Shapes, // Using Shapes as a generic icon for both
   },
-  {
-    title: 'Notifications',
-    href: '/notifications',
-    icon: Bell,
-  },
-  {
-    title: 'Settings',
-    href: '/settings',
-    icon: Settings,
-  },
+  // {
+  //   title: 'Notifications',
+  //   href: '/notifications',
+  //   icon: Bell,
+  // },
+  // {
+  //   title: 'Settings',
+  //   href: '/settings',
+  //   icon: Settings,
+  // },
 ];
 
 export const bottomNavItems: NavItem[] = [
     {
         title: 'Logout',
-        href: '#', // Placeholder for logout functionality
+        href: '/login', // Placeholder for logout functionality
         icon: LogOut,
     }
 ]

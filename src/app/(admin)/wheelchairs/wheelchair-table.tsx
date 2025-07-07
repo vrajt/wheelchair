@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
-import type { Wheelchair } from '@/types';
+import React, {useEffect, useState, useMemo } from 'react';
+//import type { Wheelchair } from '@/types';
 import { mockWheelchairs } from '@/lib/mock-data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -16,20 +16,41 @@ import { PageTitle } from '@/components/page-title';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const ITEMS_PER_PAGE = 10;
+interface Wheelchair {
+  id: string;
+  name: string;
+  category_id: number;
+  is_globally_available: boolean;
+  average_rating: string;
+  total_reviews: number;
+  imageUrl?: string;
+}
+
+const categoryMap: Record<number, string> = {
+  9: "Manual",
+  10: "Power",
+  11: "Reclining",
+};
 
 export default function WheelchairTable() {
-  const [wheelchairs, setWheelchairs] = useState<Wheelchair[]>(mockWheelchairs);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [wheelchairs, setWheelchairs] = useState<Wheelchair[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingWheelchair, setEditingWheelchair] = useState<Wheelchair | null>(null);
-  const [deletingWheelchairId, setDeletingWheelchairId] = useState<string | null>(null);
 
+  useEffect(() => {
+    fetch("http://localhost:3000/admin/wheelchair/allWheelchairs")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setWheelchairs(data.data);
+        }
+      })
+      .catch((err) => console.error("Failed to fetch wheelchairs", err));
+  }, []);
 
   const filteredWheelchairs = useMemo(() => {
-    return wheelchairs.filter(w =>
-      w.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      w.category.toLowerCase().includes(searchTerm.toLowerCase())
+    return wheelchairs.filter((w) =>
+      w.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [wheelchairs, searchTerm]);
 
@@ -40,53 +61,18 @@ export default function WheelchairTable() {
 
   const totalPages = Math.ceil(filteredWheelchairs.length / ITEMS_PER_PAGE);
 
-  const handleAddWheelchair = () => {
-    setEditingWheelchair(null);
-    setIsFormOpen(true);
-  };
-
-  const handleEditWheelchair = (wheelchair: Wheelchair) => {
-    setEditingWheelchair(wheelchair);
-    setIsFormOpen(true);
-  };
-
-  const handleDeleteWheelchair = (id: string) => {
-    setDeletingWheelchairId(id);
-  };
-  
-  const confirmDelete = () => {
-    if (deletingWheelchairId) {
-      setWheelchairs(prev => prev.filter(w => w.id !== deletingWheelchairId));
-      setDeletingWheelchairId(null);
-    }
-  };
-
-  const handleFormSubmit = (wheelchairData: Wheelchair) => {
-    if (editingWheelchair) {
-      setWheelchairs(prev => prev.map(w => (w.id === wheelchairData.id ? wheelchairData : w)));
-    } else {
-      setWheelchairs(prev => [...prev, wheelchairData]);
-    }
-    setIsFormOpen(false);
-    setEditingWheelchair(null);
-  };
-  
-  const getStatusBadge = (status: Wheelchair['status']) => {
-    switch (status) {
-      case 'Available': return <Badge variant="default" className="bg-green-500 hover:bg-green-600">Available</Badge>;
-      case 'Rented': return <Badge variant="secondary" className="bg-orange-400 hover:bg-orange-500 text-orange-900">Rented</Badge>;
-      case 'Maintenance': return <Badge variant="destructive" className="bg-yellow-500 hover:bg-yellow-600 text-yellow-900">Maintenance</Badge>;
-      default: return <Badge variant="outline">{status}</Badge>;
-    }
+  const getStatusBadge = (available: boolean) => {
+    return available ? (
+      <Badge className="bg-green-500 text-white">Available</Badge>
+    ) : (
+      <Badge className="bg-yellow-500 text-black">Maintenance</Badge>
+    );
   };
 
   return (
     <>
-      <PageTitle title="Wheelchair Management">
-        <Button onClick={handleAddWheelchair}>
-          <PlusCircle className="mr-2 h-4 w-4" /> Add Wheelchair
-        </Button>
-      </PageTitle>
+      <PageTitle title="Wheelchairs" />
+
       <div className="mb-4">
         <Input
           placeholder="Search wheelchairs..."
@@ -98,99 +84,52 @@ export default function WheelchairTable() {
           className="max-w-sm"
         />
       </div>
+
       <div className="rounded-md border shadow-sm bg-card">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Image</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Daily Rate</TableHead>
-              <TableHead>Reviews</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Rating</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedWheelchairs.map((wheelchair) => (
               <TableRow key={wheelchair.id}>
-                <TableCell>
-                  <div className="relative h-12 w-16 rounded-md overflow-hidden border">
-                    <Image src={wheelchair.imageUrl || "https://placehold.co/100x80.png"} alt={wheelchair.name} layout="fill" objectFit="cover" data-ai-hint={wheelchair.dataAiHint || "wheelchair product"}/>
-                  </div>
-                </TableCell>
-                <TableCell className="font-medium">{wheelchair.name}</TableCell>
-                <TableCell className="text-muted-foreground">{wheelchair.category}</TableCell>
-                <TableCell>{getStatusBadge(wheelchair.status)}</TableCell>
-                <TableCell className="text-muted-foreground">${wheelchair.dailyRate.toFixed(2)}</TableCell>
+               
+                <TableCell>{wheelchair.name}</TableCell>
+                <TableCell>{categoryMap[wheelchair.category_id] || "Unknown"}</TableCell>
+                <TableCell>{getStatusBadge(wheelchair.is_globally_available)}</TableCell>
                 <TableCell className="text-muted-foreground">
                   <div className="flex items-center">
                     <Star className="h-4 w-4 mr-1 text-yellow-400 fill-yellow-400" />
-                    {wheelchair.averageRating?.toFixed(1) || 'N/A'} ({wheelchair.reviewsCount || 0})
+                    {parseFloat(wheelchair.average_rating || "0").toFixed(1)} (
+                    {wheelchair.total_reviews})
                   </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleEditWheelchair(wheelchair)}>
-                        <Edit className="mr-2 h-4 w-4" /> Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => console.log(`Viewing reviews for ${wheelchair.name}`)}>
-                        <Eye className="mr-2 h-4 w-4" /> View Reviews
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-600 hover:text-red-700 focus:text-red-700" onClick={() => handleDeleteWheelchair(wheelchair.id)}>
-                        <Trash2 className="mr-2 h-4 w-4" /> Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
+
       {totalPages > 1 && (
         <PaginationControls
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-            canPreviousPage={currentPage > 1}
-            canNextPage={currentPage < totalPages}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          canPreviousPage={currentPage > 1}
+          canNextPage={currentPage < totalPages}
         />
       )}
-      {paginatedWheelchairs.length === 0 && (
-        <div className="text-center py-10 text-muted-foreground">No wheelchairs found.</div>
-      )}
 
-      <WheelchairForm
-        isOpen={isFormOpen}
-        onClose={() => {
-          setIsFormOpen(false);
-          setEditingWheelchair(null);
-        }}
-        onSubmit={handleFormSubmit}
-        initialData={editingWheelchair}
-      />
-      
-      <AlertDialog open={!!deletingWheelchairId} onOpenChange={(open) => !open && setDeletingWheelchairId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the wheelchair.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeletingWheelchairId(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {paginatedWheelchairs.length === 0 && (
+        <div className="text-center py-10 text-muted-foreground">
+          No wheelchairs found.
+        </div>
+      )}
     </>
   );
 }

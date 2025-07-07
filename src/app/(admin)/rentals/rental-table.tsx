@@ -25,16 +25,17 @@ type Rental = {
 };
 
 export default function RentalTable() {
-  const [rentals, setRentals] = useState<Rental[]>([]);
+  const [rentals, setRentals] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const baseUrl=process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/rent/allOrders")
+    fetch(`${baseUrl}/admin/rent/allOrders`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
-          setRentals(data.data.orders);
+          setRentals(data.data); // 🔄 no longer data.data.orders
         }
       })
       .catch((err) => {
@@ -45,7 +46,7 @@ export default function RentalTable() {
   const filteredRentals = useMemo(() => {
     return rentals.filter((rental) =>
       rental.id.toString().includes(searchTerm.toLowerCase()) ||
-      rental.wheelchair.name.toLowerCase().includes(searchTerm.toLowerCase())
+      rental?.wheelchair?.name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [rentals, searchTerm]);
 
@@ -57,20 +58,42 @@ export default function RentalTable() {
   const totalPages = Math.ceil(filteredRentals.length / ITEMS_PER_PAGE);
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "Ongoing":
-        return <Badge className="bg-blue-500 text-white"><CalendarDays className="mr-1 h-3 w-3" />Ongoing</Badge>;
-      case "Completed":
-        return <Badge className="bg-green-500 text-white"><CheckCircle className="mr-1 h-3 w-3" />Completed</Badge>;
-      case "Cancelled":
-        return <Badge className="bg-red-500 text-white"><XCircle className="mr-1 h-3 w-3" />Cancelled</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
+    if (status === "Ongoing") {
+      return <Badge className="bg-blue-500 text-white"><CalendarDays className="mr-1 h-3 w-3" />Ongoing</Badge>;
+    } else if (status === "Completed") {
+      return <Badge className="bg-green-500 text-white"><CheckCircle className="mr-1 h-3 w-3" />Completed</Badge>;
+    } else if (status === "Cancelled") {
+      return <Badge className="bg-red-500 text-white"><XCircle className="mr-1 h-3 w-3" />Cancelled</Badge>;
+    } else {
+      return <Badge variant="outline">{status}</Badge>;
     }
   };
 
   const handleExport = () => {
-    console.log("Export logic goes here");
+    if (rentals.length === 0) return;
+
+    const headers = ["ID", "Wheelchair", "Start Date", "End Date", "Total Amount", "Status"];
+    const rows = rentals.map((r) => [
+      r.id,
+      r?.wheelchair?.name ?? "-",
+      r.rent_start_date,
+      r.rent_end_date,
+      r.total_amount,
+      r.order_status,
+    ]);
+
+    const csv = [
+      headers.join(","),
+      ...rows.map((row) => row.join(","))
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "rentals.csv";
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   return (
@@ -110,7 +133,7 @@ export default function RentalTable() {
             {paginatedRentals.map((rental) => (
               <TableRow key={rental.id}>
                 <TableCell>{rental.id}</TableCell>
-                <TableCell>{rental.wheelchair.name}</TableCell>
+                <TableCell>{rental?.wheelchair?.name || "-"}</TableCell>
                 <TableCell>{new Date(rental.rent_start_date).toLocaleDateString()}</TableCell>
                 <TableCell>{new Date(rental.rent_end_date).toLocaleDateString()}</TableCell>
                 <TableCell>₹{parseFloat(rental.total_amount).toFixed(2)}</TableCell>
