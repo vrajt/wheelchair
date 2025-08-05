@@ -80,7 +80,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="text"
-                placeholder="admin"
+                placeholder="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -92,7 +92,7 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="admin123"
+                placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -110,7 +110,7 @@ export default function LoginPage() {
           </form>
         </CardContent>
         <CardFooter className="text-center text-xs text-muted-foreground">
-          <p>Demo credentials: admin / admin123</p>
+     
         </CardFooter>
       </Card>
     </div>
