@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Package2, LogIn } from "lucide-react";
 import { APP_NAME } from "@/config/nav";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils"; // Added this import
+import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -28,31 +28,31 @@ export default function LoginPage() {
     }
   }, [router]);
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsLoading(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-  await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+    // Mock authentication
+    // In a real app, you'd call an API here
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
 
-  if (email === 'admin' && password === 'admin123') {
-    localStorage.setItem('isLoggedIn', 'true');
-    toast({
-      title: "Login Successful",
-      description: `Welcome back to ${APP_NAME}!`,
-      className: "bg-green-500 text-white",
-    });
-
-    // ✅ Redirect to your Express route
-    window.location.href = '/dashboard';
-  } else {
-    toast({
-      variant: "destructive",
-      title: "Login Failed",
-      description: "Invalid email or password. Please try again.",
-    });
-    setIsLoading(false);
-  }
-};
+    if (email === 'admin' && password === 'admin123') {
+      localStorage.setItem('isLoggedIn', 'true');
+      router.replace('/dashboard');
+      toast({
+        title: "Login Successful",
+        description: `Welcome back to ${APP_NAME}!`,
+        className: "bg-green-500 text-white",
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: "Invalid email or password. Please try again.",
+      });
+      setIsLoading(false);
+    }
+  };
   
   if (!isMounted) {
     return (
@@ -61,7 +61,6 @@ const handleSubmit = async (e: React.FormEvent) => {
       </div>
     );
   }
-  
 
 
   return (
@@ -77,23 +76,23 @@ const handleSubmit = async (e: React.FormEvent) => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Username</Label>
               <Input
                 id="email"
-                type="text" // ✅ changed from "email"
+                type="text"
                 placeholder="admin"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
-                />
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="password"
+                placeholder="admin123"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -111,7 +110,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           </form>
         </CardContent>
         <CardFooter className="text-center text-xs text-muted-foreground">
-          <p>Demo credentials: admin@example.com / password</p>
+          <p>Demo credentials: admin / admin123</p>
         </CardFooter>
       </Card>
     </div>

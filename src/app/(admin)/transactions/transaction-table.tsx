@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileDown, CheckCircle, XCircle, Clock, ShieldAlert, ShieldCheck, AlertTriangle } from "lucide-react";
-import AnomalyDetectionModal from './anomaly-detection-modal';
+//import AnomalyDetectionModal from './anomaly-detection-modal';
 import { PaginationControls } from '@/components/pagination-controls';
 import { PageTitle } from '@/components/page-title';
 import type { TransactionAnomalyOutput } from '@/ai/flows/transaction-anomaly-detection';
@@ -101,11 +101,11 @@ export default function TransactionTable() {
     setIsModalOpen(true);
   };
 
-  const handleAnomalyReport = (transactionId: string, report: TransactionAnomalyOutput) => {
-    setTransactions(prev => 
-      prev.map(tx => tx.id === transactionId ? { ...tx, anomalyReport: report } : tx)
-    );
-  };
+  // const handleAnomalyReport = (transactionId: string, report: TransactionAnomalyOutput) => {
+  //   setTransactions(prev => 
+  //     prev.map(tx => tx.id === transactionId ? { ...tx, anomalyReport: report } : tx)
+  //   );
+  // };
 
   const getStatusBadge = (status: Transaction['transaction_status']) => {
     switch (status) {
@@ -149,11 +149,11 @@ export default function TransactionTable() {
             <TableRow>
               <TableHead>Transaction ID</TableHead>
               {/* <TableHead>User</TableHead> */}
-              <TableHead>Amount</TableHead>
+              <TableHead>Amount(INR)</TableHead>
               {/* <TableHead>Date</TableHead> */}
               <TableHead>Payment Method</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              {/* <TableHead className="text-right">Actions</TableHead> */}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -161,7 +161,7 @@ export default function TransactionTable() {
               <TableRow key={transaction.id}>
                 <TableCell className="font-medium">{transaction.transaction_id}</TableCell>
                 {/* <TableCell className="text-muted-foreground">{transaction.userName}</TableCell> */}
-                <TableCell className="text-muted-foreground">${parseFloat(transaction.amount).toFixed(2)}</TableCell>
+                <TableCell className="text-muted-foreground">{parseFloat(transaction.amount).toFixed(2)}</TableCell>
                 {/* <TableCell className="text-muted-foreground">{new Date(transaction.date).toLocaleDateString()}</TableCell> */}
                 <TableCell className="text-muted-foreground">{transaction.payment_gateway}</TableCell>
                 <TableCell>
@@ -169,9 +169,9 @@ export default function TransactionTable() {
                   {/* {getAnomalyBadge(transaction.anomalyReport)} */}
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button variant="ghost" size="sm" onClick={() => handleOpenModal(transaction)}>
+                  {/* <Button variant="ghost" size="sm" onClick={() => handleOpenModal(transaction)}>
                     <ShieldAlert className="mr-1 h-4 w-4" /> Analyze
-                  </Button>
+                  </Button> */}
                 </TableCell>
               </TableRow>
             ))}
@@ -191,12 +191,7 @@ export default function TransactionTable() {
         <div className="text-center py-10 text-muted-foreground">No transactions found.</div>
       )}
 
-      <AnomalyDetectionModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        transaction={selectedTransaction}
-        onAnomalyReport={handleAnomalyReport}
-      />
+ 
     </>
   );
 }

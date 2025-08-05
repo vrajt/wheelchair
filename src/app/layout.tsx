@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'Wheelchair Rental Hub Admin',
-  description: 'Admin dashboard for Wheelchair Rental Hub',
+  title: 'Flying Monk Admin',
+  description: 'Admin dashboard for Flying Monk',
 };
 
 export default function RootLayout({

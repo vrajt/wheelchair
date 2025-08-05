@@ -3,22 +3,46 @@ export interface User {
   name: string;
   email: string;
   status: 'Active' | 'Inactive';
-  kycStatus: 'Pending' | 'Verified' | 'Rejected';
+  kycStatus: 'Pending' | 'Verified' | 'Rejected' | string;
   avatarUrl?: string;
   registrationDate: string;
+  documents?: Array<{
+    type: "Passport" | "Driver's License" | "Proof of Address";
+    url: string;
+  }>;
+  kyc_document_url?: string;
 }
 
 export interface Wheelchair {
   id: string;
   name: string;
-  category: string;
-  status: 'Available' | 'Rented' | 'Maintenance';
-  imageUrl?: string;
-  dataAiHint?: string;
+  category_id: number;
   description: string;
-  dailyRate: number;
-  reviewsCount?: number;
-  averageRating?: number;
+  information: string;
+  is_globally_available: boolean;
+  average_rating: string;
+  total_reviews: number;
+  model?: string;
+  manufacturer?: string;
+  category?: {
+    id: number;
+    name: string;
+  };
+  images?: { url: string }[];
+}
+
+export interface WheelchairCategory {
+  id: number;
+  name: string;
+  description: string;
+}
+
+
+export interface RentalTransaction {
+    id: number;
+    transaction_id: string;
+    payment_gateway: string;
+    transaction_status: string;
 }
 
 export interface Rental {
@@ -31,6 +55,7 @@ export interface Rental {
   endDate: string;
   status: 'Ongoing' | 'Completed' | 'Cancelled';
   totalAmount: number;
+  rent_transactions?: RentalTransaction[];
 }
 
 export interface Transaction {
@@ -61,7 +86,7 @@ export interface Category {
 }
 
 export interface City {
-  id: string;
+  id:string;
   name: string;
   status: 'Active' | 'Inactive';
 }
@@ -71,7 +96,7 @@ export interface Notification {
   title: string;
   message: string;
   date: string;
-  read: boolean;
+read: boolean;
 }
 
 // For table pagination and search

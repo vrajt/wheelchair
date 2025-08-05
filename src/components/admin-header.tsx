@@ -19,9 +19,10 @@ import { SidebarTrigger } from "./ui/sidebar";
 
 interface AdminHeaderProps {
   pageTitle: string;
+  onLogout: () => void;
 }
 
-export function AdminHeader({ pageTitle }: AdminHeaderProps) {
+export function AdminHeader({ pageTitle, onLogout }: AdminHeaderProps) {
   const pathname = usePathname();
 
   return (
@@ -36,7 +37,7 @@ export function AdminHeader({ pageTitle }: AdminHeaderProps) {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" className="rounded-full">
             <Avatar className="h-8 w-8">
-              <AvatarImage src="https://placehold.co/40x40.png" alt="Admin" data-ai-hint="user avatar" />
+              <AvatarImage src="https://placehold.co/40x40.png" alt="Admin" />
               <AvatarFallback>AD</AvatarFallback>
             </Avatar>
           </Button>
@@ -49,7 +50,7 @@ export function AdminHeader({ pageTitle }: AdminHeaderProps) {
           </DropdownMenuItem>
           <DropdownMenuItem>Support</DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>Logout</DropdownMenuItem>
+          <DropdownMenuItem onClick={onLogout}>Logout</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>

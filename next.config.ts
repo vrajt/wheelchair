@@ -1,6 +1,8 @@
 import type { NextConfig } from 'next';
 import 'dotenv/config';
+
 const nextConfig: NextConfig = {
+  reactStrictMode: true,
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
@@ -20,5 +22,7 @@ const nextConfig: NextConfig = {
     ],
   },
 };
+
 console.log('Loaded API URL:', process.env.NEXT_PUBLIC_API_URL);
+
 export default nextConfig;

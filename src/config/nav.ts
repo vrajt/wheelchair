@@ -14,17 +14,7 @@ export const navItems: NavItem[] = [
     href: '/dashboard',
     icon: LayoutDashboard,
   },
-  {
-    title: 'User Management',
-    href: '/users',
-    icon: Users,
-  },
-  {
-    title: 'Wheelchair Management',
-    href: '/wheelchairs',
-    icon: Accessibility,
-  },
-  {
+   {
     title: 'Rental Management',
     href: '/rentals',
     icon: ShoppingCart,
@@ -34,6 +24,19 @@ export const navItems: NavItem[] = [
     href: '/transactions',
     icon: CreditCard,
   },
+  {
+    title: 'Wheelchair Management',
+    href: '/wheelchairs',
+    icon: Accessibility,
+  },
+  {
+    title: 'User Management',
+    href: '/users',
+    icon: Users,
+  },
+  
+ 
+  
   {
     title: 'Cities',
     href: '/categories-cities',
@@ -59,4 +62,4 @@ export const bottomNavItems: NavItem[] = [
     }
 ]
 
-export const APP_NAME = "Wheelchair Rental Hub";
+export const APP_NAME = "Flying Monk";
